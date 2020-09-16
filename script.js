@@ -36,6 +36,25 @@ map.addEventListener('click', event =>{
         mapMarker.push(newMarker,bufMarker)
         
         
-        console.log(mapMarker)
+        polylinePrinter(mapMarker)
     }
 })
+let polyline
+
+function polylinePrinter(markerArray){
+    let latLngForPolyline = []
+    markerArray.forEach(element => {
+        latLngForPolyline.push(element._latlng)
+    })
+    console.log(latLngForPolyline)
+    
+
+    
+    if (!polyline) {
+        console.log('123')
+        polyline = L.polyline(latLngForPolyline, {color: 'red'}).addTo(map)
+    }else{
+        polyline.setLatLngs(latLngForPolyline)
+        polyline.redraw()
+    }
+}
