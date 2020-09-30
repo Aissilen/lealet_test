@@ -3,7 +3,7 @@ export function polylinePrinter(markerArray){
     markerArray.forEach(element => {
         latLngForPolyline.push(element._latlng)
     })
-       
+
     if (!polyline) {
         polyline = L.polyline(latLngForPolyline, {color: 'red'}).addTo(map)
     }else{
