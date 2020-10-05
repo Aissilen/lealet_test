@@ -6,7 +6,7 @@ const map = new L.map('map',
     center: [52.287055 , 104.281047],
     zoom: 14,
 })
-.setView([52.287055 , 104.281047], 14)
+
 L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map)
 
 let mapMarker = []
@@ -15,6 +15,10 @@ let mapPolylines = []
 
 let rk_coord = [52.28664250209102, 104.28634643554689]
 let rs_coord = [52.282494522127635, 104.29347038269043]
+
+
+let is_color_editable = false
+let is_marker_editable = false
 
 let marker_array_from_db = {
     "first": {
@@ -69,6 +73,7 @@ function crateArrayWithInterimMarker(json,keys) {
 }
 
 function drawAllMarkerOnMap(){
+    mapMarker = []
     let rkMarker = new L.Marker(rk_coord,{
         type : 'rk',
         draggable: false,
@@ -175,32 +180,32 @@ function rebuildJsonWithDraggendEvent(){
 }
 
 map.addEventListener('click', event => {
-    const event_latlng = [event.latlng.lat,event.latlng.lng]
+    if (is_marker_editable){
+        const event_latlng = [event.latlng.lat,event.latlng.lng]
 
-    cleanAllMarkersAndPolylines()
-    interimMarkerCoord.push(event_latlng)
-
-    drawAllMarkerOnMap()
-    marker_array_from_db = rebuildJsonWithNewMarkers(marker_array_from_db,json_keys,event_latlng)
-    drawAllPolyline(marker_array_from_db,json_keys)
+        cleanAllMarkersAndPolylines()
+        interimMarkerCoord.push(event_latlng)
+    
+        drawAllMarkerOnMap()
+        marker_array_from_db = rebuildJsonWithNewMarkers(marker_array_from_db,json_keys,event_latlng)
+        drawAllPolyline(marker_array_from_db,json_keys)
+    }
 })
 
 
 function _addDragendListenerToMarkerAndRedrawPolyline(element){
     element.addEventListener('dragend',event => {
-
-        let marker_number_name = event.target.options.type
-        let marker_number = Number(marker_number_name.replace('new_marker_',''))
-        let draggendMarkerLatLng = [event.target._latlng.lat,event.target._latlng.lng]
-        
-        interimMarkerCoord[marker_number-1] = draggendMarkerLatLng 
-        
-        cleanAllMarkersAndPolylines()
-        drawAllMarkerOnMap()
-
-        marker_array_from_db = rebuildJsonWithDraggendEvent()
-        drawAllPolyline(marker_array_from_db,json_keys)
-
+            let marker_number_name = event.target.options.type
+            let marker_number = Number(marker_number_name.replace('new_marker_',''))
+            let draggendMarkerLatLng = [event.target._latlng.lat,event.target._latlng.lng]
+            
+            interimMarkerCoord[marker_number-1] = draggendMarkerLatLng 
+            
+            cleanAllMarkersAndPolylines()
+            drawAllMarkerOnMap()
+    
+            marker_array_from_db = rebuildJsonWithDraggendEvent()
+            drawAllPolyline(marker_array_from_db,json_keys)
     })
 }
 
@@ -208,76 +213,42 @@ let active_polyline
 
 function _addListenerToPolyline(element){
     element.addEventListener('popupopen', event => {
-        document.getElementById('color_choice').style.cssText = 'display: block'
-        momentum_color = event.target.options.color
-        color_picker = document.getElementsByName('color')
-        
-        color_picker.forEach( color => {
-            if (color.value == momentum_color){
-                color.checked =true
-            }
-        })
+        if (is_color_editable){
+            document.getElementById('color_choice').style.cssText = 'display: block'
+            momentum_color = event.target.options.color
+            color_picker = document.getElementsByName('color')
+            
+            color_picker.forEach( color => {
+                if (color.value == momentum_color){
+                    color.checked =true
+                }
+            })
 
-        active_polyline = element
-        // console.log(color_picker.value)
+            active_polyline = element
+
+        }
     })
 }
 
 color_picker = document.getElementsByName('color')
 color_picker.forEach( el => {
     el.addEventListener('change', event => {
-        console.log(event)
-        console.log(active_polyline)
-        active_polyline.options.color = event.srcElement.attributes[3].value
+        let selected_color =  event.srcElement.attributes[3].value
+        active_polyline.options.color = selected_color
         active_polyline.redraw()
+        marker_array_from_db[active_polyline.options.json_key].color = selected_color
     })
 })
-// color_picker.addEventListener('click', event => {
-//     console.log(event)
-// })
 
-// const cancelBtn = document.getElementById('Cancel')
-// const saveBtn = document.getElementById('Save')
+document.querySelector('#marker_edit').addEventListener('click', () => {
+    is_marker_editable = true
+    is_color_editable = false
+})
+document.querySelector('#color_edit').addEventListener('click', () => {
+    is_marker_editable = false
+    is_color_editable = true
+})
 
-// cancelBtn.addEventListener('click', cancelBtnRemoveMarker)
-// saveBtn.addEventListener('click', saveNewCoordToBackend)
-
-// function cancelBtnRemoveMarker(){
-//     if (mapMarker.length > 2){
-//         let bufMarker = mapMarker[mapMarker.length - 1]
-//         let markerToRemove = mapMarker[mapMarker.length - 2]
-//         markerToRemove.remove()
-//         mapMarker.pop()
-//         mapMarker.pop()
-//         mapMarker.push(bufMarker)
-//         polylinePrinter(mapMarker)
-//     }else{
-//         console.log('nothink to cancel')
-//     } 
-// }
-
-// function saveNewCoordToBackend(){
-//     let arrayToSave = [...mapMarker]
-
-//     if (mapMarker.length > 2){
-//         arrayToSave.pop()
-//         arrayToSave.shift()
-//     }else{
-//         arrayToSave = []
-//     }
-//     console.log('new Marker -', arrayToSave);
-// }
-
-// function polylinePrinter(markerArray){
-//     let latLngForPolyline = []
-//     markerArray.forEach(element => {
-//         latLngForPolyline.push(element._latlng)
-//     })
-
-//     if (!polyline) {
-//         polyline = L.polyline(latLngForPolyline, {color: 'red'}).addTo(map)
-//     }else{
-//         polyline.setLatLngs(latLngForPolyline)
-//         polyline.redraw()
-//     }
-// }
+document.querySelector('#Save').addEventListener('click', () => {
+    console.log(JSON.stringify(marker_array_from_db))
+})
