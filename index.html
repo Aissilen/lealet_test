@@ -16,25 +16,39 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet.draw/1.0.4/leaflet.draw-src.css"
         integrity="sha512-vJfMKRRm4c4UupyPwGUZI8U651mSzbmmPgR3sdE3LcwBPsdGeARvUM5EcSTg34DK8YIRiIo+oJwNfZPMKEQyug=="
         crossorigin="anonymous" />
-
+    <link rel="stylesheet" href="./L.Control.Sidebar.css" />
+    <script src="./L.Control.Sidebar.js"></script>
 </head>
 <body >
-    <div id = "map" style = "width:1000px; height:720px;"></div>
+    <div id = "map" style = "width:1400px; height:720px;"></div>
     <button type = "button" id = "Cancel">Cancel</button>
     <button type = "button" id = "Save">Save</button>
 
     <button type = "button" id = "marker_edit">Редактировать узлы</button>
     <button type = "button" id = "color_edit">Редактировать цвет</button>
 
-    <div id = "color_choice" style = "display:none">
+    {% comment %} <div id = "color_choice" style = "display:none">
         <input type="radio" id="red_choice" name="color" value="red">
         <label for="red_choice">RED</label>
         <input type="radio" id="blue_choice" name="color" value="blue">
         <label for="blue_choice">BLUE</label>
         <input type="radio" id="green_choice" name="color" value="green">
         <label for="green_choice">GREEN</label>
-    </div>
+    </div> {% endcomment %}
 
+    <div id="sidebar">
+        <h1>leaflet-sidebar</h1>
+
+        <div id = "color_choice">
+            <input type="radio" id="red_choice" name="color" value="red">
+            <label for="red_choice">RED</label>
+            <input type="radio" id="blue_choice" name="color" value="blue">
+            <label for="blue_choice">BLUE</label>
+            <input type="radio" id="green_choice" name="color" value="green">
+            <label for="green_choice">GREEN</label>
+        </div>
+
+    </div>
     
 
     <!-- <script src="./geoscript.js"></script> -->

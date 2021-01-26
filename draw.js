@@ -32,7 +32,7 @@ map.fitBounds(polyline.getBounds())
 editableLayers.addLayer(polyline)
 
 
-console.log(editableLayers)
+// console.log(editableLayers)
 
 // let jsonLayer = L.geoJson(geojsonFeature, {
 //     onEachFeature: function (feature, layer) {
@@ -46,6 +46,13 @@ console.log(editableLayers)
 //     //   }
 //     }
 // }).addTo(map)
+
+var sidebar = L.control.sidebar('sidebar', {
+    position: 'right'
+})
+
+map.addControl(sidebar)
+
 
 let options = {
     position: 'topleft',
@@ -65,16 +72,71 @@ let options = {
 var drawControl = new L.Control.Draw(options)
 map.addControl(drawControl)
 
+let new_kek = new L.layerGroup()
+
 map.on('draw:edited', function (e) {
     var layers = e.layers;
     console.log(e)
     layers.eachLayer(function (layer) {
         //do whatever you want; most likely save back to db
 
-        console.log(layer)
-        console.log(polyline)
+        // console.log(layer)
+        // console.log(polyline)
+
+        let objectOut = layer.toGeoJSON()
+        let coord_array = objectOut.geometry.coordinates
+        let polyline = layer
+
+        layer.remove()
+
+        let length = coord_array.length
+
+        
+
+        coord_array.forEach( (el,index,array) => {
+            if (index != length-1){
+                let new_lat_lng = [[array[index][1],array[index][0]],[array[index+1][1],array[index+1][0]]]
+
+                console.log(new_lat_lng)
+                let polyline = L.polyline(new_lat_lng, {color: 'red'}).addTo(new_kek)
+
+                polyline.addEventListener('click', ev => {
+                    console.log(ev)
+                    sidebar.show()
+                })
+
+            }
+        })
+        new_kek.addTo(map)
+        
+        // new_kek.addEventListener('click', ev => {
+        //     console.log(ev)
+        // })
+        
+        let objectOut2 = new_kek.toGeoJSON()
+        let coord_array2 = objectOut.geometry.coordinates
+
+        console.log(objectOut2)
     });
 });
+
+map.on('draw:editstart', e =>{
+    console.log('edit start',e);
+    console.log(new_kek);
+    new_kek.remove()
+    new_kek.clearLayers()
+    polyline.addTo(map)
+    editableLayers.addLayer(polyline)
+})
+
+
+
+// layer.on('click', function() {
+//     objectOut = layer.toGeoJSON();
+//     textOut = JSON.stringify(objectOut);
+//   });
+
+
 // map.on(L.Draw.Event.CREATED, function(e) {
 //   var type = e.layerType,
 //     layer = e.layer;
