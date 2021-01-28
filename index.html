@@ -4,6 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>TEST</title>
+
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.1.0/css/bootstrap.min.css">
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css"
         integrity="sha512-xodZBNTC5n17Xt2atTPuE1HxjVMSvLVW9ocqUKLsCC5CXdbqCmblAshOMAS6/keqq/sMZMZ19scR4PsZChSR7A=="
         crossorigin=""/>
@@ -21,33 +23,29 @@
 </head>
 <body >
     <div id = "map" style = "width:1400px; height:720px;"></div>
-    <button type = "button" id = "Cancel">Cancel</button>
-    <button type = "button" id = "Save">Save</button>
-
-    <button type = "button" id = "marker_edit">Редактировать узлы</button>
-    <button type = "button" id = "color_edit">Редактировать цвет</button>
-
-    {% comment %} <div id = "color_choice" style = "display:none">
-        <input type="radio" id="red_choice" name="color" value="red">
-        <label for="red_choice">RED</label>
-        <input type="radio" id="blue_choice" name="color" value="blue">
-        <label for="blue_choice">BLUE</label>
-        <input type="radio" id="green_choice" name="color" value="green">
-        <label for="green_choice">GREEN</label>
-    </div> {% endcomment %}
 
     <div id="sidebar">
-        <h1>leaflet-sidebar</h1>
-
-        <div id = "color_choice">
-            <input type="radio" id="red_choice" name="color" value="red">
-            <label for="red_choice">RED</label>
-            <input type="radio" id="blue_choice" name="color" value="blue">
-            <label for="blue_choice">BLUE</label>
-            <input type="radio" id="green_choice" name="color" value="green">
-            <label for="green_choice">GREEN</label>
+        <h1>Редактирование участка</h1>
+        <br>
+        <form id = "color_choice">
+            <input type="radio" id="canalization_choice" name="color" value="canalization">
+            <label for="canalization_choice">По канализации</label><br>
+            <input type="radio" id="facade_choice" name="color" value="facade">
+            <label for="facade_choice">По фасаду</label><br>
+            <input type="radio" id="air_choice" name="color" value="air">
+            <label for="air_choice">Воздушная линия</label>
+        </form>
+        <br>
+        <div class="row" id="segment_length_editor">
+            <div class="col-12">
+                <div class="input-group">
+                    <input type="text" class="form-control" placeholder="Длина" id="segment_length" aria-label="Text input for segment length">
+                    <div class="input-group-append">
+                        <button class="btn btn-outline-success" type="button" id="save_segment_length">Сохранить</button>
+                    </div>
+                </div>
+            </div>
         </div>
-
     </div>
     
 

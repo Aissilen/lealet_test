@@ -9,20 +9,51 @@ const map = L.map('map', {
     }
 )
 
+const LeafIcon = L.Icon.extend({
+    options:{
+        // shadowUrl: 'leaf-shadow.png', // ТУТ можно намутить тень для иконки
+        iconSize:     [30, 40], // size of the icon
+        shadowSize:   [50, 64], // size of the shadow
+        iconAnchor:   [15, 45], // point of the icon which will correspond to marker's location
+        shadowAnchor: [4, 62],  // the same for the shadow
+        popupAnchor:  [0, -36] // point from which the popup should open relative to the iconAnchor
+    }
+})
+
+/// создаем обьекты иконок с своими картинками
+const offlineRsIcon = new LeafIcon({iconUrl: "./img/iconrshaOffline.png"}),
+onlineAtsIcon = new LeafIcon({iconUrl: "./img/iconatsOnline.png"})
+
+const pointLIcon = L.Icon.extend({
+    options: {
+        iconSize:     [10, 10], // size of the icon
+        shadowSize:   [1, 1], // size of the shadow
+        iconAnchor:   [5, 5], // point of the icon which will correspond to marker's location
+        shadowAnchor: [4, 62],  // the same for the shadow
+        popupAnchor:  [0, -36] // point from which the popup should open relative to the iconAnchor
+    }
+})
+
+const pointIcon = new pointLIcon({iconUrl: "./img/point.png"})
+
+
+const colors = {
+    "canalization": "#929b39",
+    "facade": "#f78879",
+    "air": "#4ba6fa",
+}
+const radio_color = document.getElementById('color_choice')
+
 var editableLayers = new L.FeatureGroup()
 map.addLayer(editableLayers)
-
 
 let usi_coord = ["52.287009999999995", "104.245869"]
 let ats_coord = ["52.27658", "104.248222"]
 
-var latlngs = [
-    ["52.287009999999995", "104.245869"],
-    ["52.27658", "104.248222"]
-]
+var latlngs = [ats_coord,usi_coord]
 
-let usi_marker = new L.Marker(usi_coord,{type: 'usi'}).addTo(map)
-let ats_marker = new L.Marker(ats_coord,{type: 'ats'}).addTo(map)
+let usi_marker = new L.Marker(usi_coord,{icon:offlineRsIcon,type: 'usi'}).addTo(map)
+let ats_marker = new L.Marker(ats_coord,{icon:onlineAtsIcon,type: 'ats'}).addTo(map)
 
 let polyline = L.polyline(latlngs, {color: 'red'}).addTo(map)
 
@@ -56,13 +87,7 @@ map.addControl(sidebar)
 
 let options = {
     position: 'topleft',
-    draw: {
-        polyline: true,
-        polygon: false,
-        circle: false, // Turns off this drawing tool 
-        rectangle: false,
-        marker: true
-    },
+    draw: false,
     edit: {
         featureGroup: editableLayers, //REQUIRED!! 
         remove: true
@@ -72,78 +97,78 @@ let options = {
 var drawControl = new L.Control.Draw(options)
 map.addControl(drawControl)
 
-let new_kek = new L.layerGroup()
 
-map.on('draw:edited', function (e) {
+
+console.log(drawControl.options.edit)   
+// let new_kek = new L.layerGroup()
+
+let feautures = new L.featureGroup()
+let selected_feature
+
+map.on('draw:edited', e => {
     var layers = e.layers;
     console.log(e)
-    layers.eachLayer(function (layer) {
+    layers.eachLayer(layer => {
         //do whatever you want; most likely save back to db
 
-        // console.log(layer)
-        // console.log(polyline)
+        let features_lat_lng = layer.getLatLngs()
 
-        let objectOut = layer.toGeoJSON()
-        let coord_array = objectOut.geometry.coordinates
-        let polyline = layer
+        features_lat_lng.forEach( (el,index,array) => {
+            if (index != array.length -1 ){
+                let polyline = L.polyline([array[index],array[index+1]], {color: colors.canalization}).addTo(feautures)
+                
+                let point = new L.Marker(array[index+1],{icon:pointIcon,type: 'point'}).addTo(feautures)
 
-        layer.remove()
-
-        let length = coord_array.length
-
-        
-
-        coord_array.forEach( (el,index,array) => {
-            if (index != length-1){
-                let new_lat_lng = [[array[index][1],array[index][0]],[array[index+1][1],array[index+1][0]]]
-
-                console.log(new_lat_lng)
-                let polyline = L.polyline(new_lat_lng, {color: 'red'}).addTo(new_kek)
+                let feature = polyline.feature = polyline.feature || {}
+                feature.type = "Feature"
+                feature.properties = feature.properties || {}
+                feature.properties["type"] = "canalization"
+                feature.properties["order"] = index+1
+                feature.properties["length"] = ''
 
                 polyline.addEventListener('click', ev => {
-                    console.log(ev)
-                    sidebar.show()
-                })
+                    selected_feature = ev.sourceTarget
 
+                    console.log('selected_feature',selected_feature.feature.properties.order)
+                    let color = selected_feature.options.color
+                    let type = getKeyByValue(colors,color)
+
+                    radio_color.color.value = type
+
+                    sidebar.show()
+                    // let geoJson = feautures.toGeoJSON()
+                    // console.log(JSON.stringify(geoJson))
+                })
             }
         })
-        new_kek.addTo(map)
-        
-        // new_kek.addEventListener('click', ev => {
-        //     console.log(ev)
-        // })
-        
-        let objectOut2 = new_kek.toGeoJSON()
-        let coord_array2 = objectOut.geometry.coordinates
 
-        console.log(objectOut2)
+        layer.remove()
+        console.log(feautures)
+        feautures.addTo(map)
     });
 });
 
+
 map.on('draw:editstart', e =>{
-    console.log('edit start',e);
-    console.log(new_kek);
-    new_kek.remove()
-    new_kek.clearLayers()
+    console.log('_______________edit started______________')
+
+    sidebar.hide()
+
+    feautures.remove()
+    feautures.clearLayers()
     polyline.addTo(map)
-    editableLayers.addLayer(polyline)
+    // editableLayers.addLayer(polyline)
 })
 
+radio_color.addEventListener('change',ev=>{
+    let value = radio_color.color.value
 
+    console.log(value, selected_feature);
+    selected_feature.options.color = colors[value]
+    selected_feature.redraw()
+})
 
-// layer.on('click', function() {
-//     objectOut = layer.toGeoJSON();
-//     textOut = JSON.stringify(objectOut);
-//   });
+function getKeyByValue(object, value) {
+    return Object.keys(object).find(key => object[key] === value)
+}
 
-
-// map.on(L.Draw.Event.CREATED, function(e) {
-//   var type = e.layerType,
-//     layer = e.layer;
-
-//   if (type === 'marker') {
-//     layer.bindPopup('A popup!');
-//   }
-
-//   editableLayers.addLayer(layer);
-// });
