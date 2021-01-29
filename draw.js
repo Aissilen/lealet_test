@@ -36,6 +36,9 @@ const pointLIcon = L.Icon.extend({
 
 const pointIcon = new pointLIcon({iconUrl: "./img/point.png"})
 
+let feautures = new L.featureGroup()
+let editableLayers = new L.FeatureGroup()
+let selected_feature
 
 const colors = {
     "canalization": "#929b39",
@@ -44,109 +47,92 @@ const colors = {
 }
 const radio_color = document.getElementById('color_choice')
 
-var editableLayers = new L.FeatureGroup()
-map.addLayer(editableLayers)
 
 let usi_coord = ["52.287009999999995", "104.245869"]
 let ats_coord = ["52.27658", "104.248222"]
 
-var latlngs = [ats_coord,usi_coord]
+let usi_marker = new L.Marker(usi_coord,{icon:offlineRsIcon,type: 'usi'}).addTo(feautures)
+let ats_marker = new L.Marker(ats_coord,{icon:onlineAtsIcon,type: 'ats'}).addTo(feautures)
+let polyline = L.polyline([ats_coord,usi_coord], {color: 'red'}).addTo(map)
 
-let usi_marker = new L.Marker(usi_coord,{icon:offlineRsIcon,type: 'usi'}).addTo(map)
-let ats_marker = new L.Marker(ats_coord,{icon:onlineAtsIcon,type: 'ats'}).addTo(map)
-
-let polyline = L.polyline(latlngs, {color: 'red'}).addTo(map)
-
-
+feautures.addTo(map)
 map.fitBounds(polyline.getBounds())
 
 editableLayers.addLayer(polyline)
+map.addLayer(editableLayers)
 
-
-// console.log(editableLayers)
-
-// let jsonLayer = L.geoJson(geojsonFeature, {
-//     onEachFeature: function (feature, layer) {
-//         console.log("feature ---- ",feature)
-//         console.log("layer ---- ",layer)
-//         editableLayers.addLayer(layer)
-//         //   if (layer instanceof L.Polyline) {
-//     //     layer.setStyle({
-//     //       'color': feature.properties.color
-//     //     });
-//     //   }
-//     }
-// }).addTo(map)
-
-var sidebar = L.control.sidebar('sidebar', {
+let sidebar = L.control.sidebar('sidebar', {
     position: 'right'
 })
-
-map.addControl(sidebar)
-
 
 let options = {
     position: 'topleft',
     draw: false,
     edit: {
         featureGroup: editableLayers, //REQUIRED!! 
-        remove: true
+        remove: false
     }
 };
 
 var drawControl = new L.Control.Draw(options)
 map.addControl(drawControl)
+map.addControl(sidebar)
 
+console.log(drawControl)
 
-
-console.log(drawControl.options.edit)   
-// let new_kek = new L.layerGroup()
-
-let feautures = new L.featureGroup()
-let selected_feature
 
 map.on('draw:edited', e => {
     var layers = e.layers;
     console.log(e)
     layers.eachLayer(layer => {
         //do whatever you want; most likely save back to db
-
         let features_lat_lng = layer.getLatLngs()
 
         features_lat_lng.forEach( (el,index,array) => {
+            let feature
             if (index != array.length -1 ){
+                if (index != 0){
+                    let point = new L.Marker(array[index],{icon:pointIcon,type: 'point'}).addTo(feautures)
+                    feature = _create_feature_properties(point)
+                    feature.properties["type"] = "point"
+                }
                 let polyline = L.polyline([array[index],array[index+1]], {color: colors.canalization}).addTo(feautures)
-                
-                let point = new L.Marker(array[index+1],{icon:pointIcon,type: 'point'}).addTo(feautures)
+                _create_color_change_event(polyline)
 
-                let feature = polyline.feature = polyline.feature || {}
-                feature.type = "Feature"
-                feature.properties = feature.properties || {}
+                feature = _create_feature_properties(polyline)
                 feature.properties["type"] = "canalization"
                 feature.properties["order"] = index+1
                 feature.properties["length"] = ''
-
-                polyline.addEventListener('click', ev => {
-                    selected_feature = ev.sourceTarget
-
-                    console.log('selected_feature',selected_feature.feature.properties.order)
-                    let color = selected_feature.options.color
-                    let type = getKeyByValue(colors,color)
-
-                    radio_color.color.value = type
-
-                    sidebar.show()
-                    // let geoJson = feautures.toGeoJSON()
-                    // console.log(JSON.stringify(geoJson))
-                })
+            }else{
+                usi_marker.setLatLng(el).addTo(feautures)
+                feature = _create_feature_properties(usi_marker)
+                feature.properties["type"] = "rs"
+                ats_marker.setLatLng(array[0]).addTo(feautures)
+                feature = _create_feature_properties(ats_marker)
+                feature.properties["type"] = "ats"
             }
         })
-
         layer.remove()
-        console.log(feautures)
         feautures.addTo(map)
-    });
-});
+    })
+})
+
+function _create_feature_properties(element){
+    let feature = element.feature = element.feature || {}
+    feature.type = "Feature"
+    feature.properties = feature.properties || {}
+    return feature
+}
+
+function _create_color_change_event(element){
+    element.addEventListener('click', ev => {
+        sidebar.show()
+        selected_feature = ev.sourceTarget
+        let color = selected_feature.options.color
+        let type = getKeyByValue(colors,color)
+        radio_color.color.value = type
+    })
+}
 
 
 map.on('draw:editstart', e =>{
@@ -157,7 +143,6 @@ map.on('draw:editstart', e =>{
     feautures.remove()
     feautures.clearLayers()
     polyline.addTo(map)
-    // editableLayers.addLayer(polyline)
 })
 
 radio_color.addEventListener('change',ev=>{
@@ -172,3 +157,21 @@ function getKeyByValue(object, value) {
     return Object.keys(object).find(key => object[key] === value)
 }
 
+document.getElementById('save_route_button').addEventListener('click', ev => {
+    ev.preventDefault()
+    let geoJson = feautures.toGeoJSON()
+    console.log(JSON.stringify(geoJson))
+})
+
+// let jsonLayer = L.geoJson(geojsonFeature, {
+//     onEachFeature: function (feature, layer) {
+//         console.log("feature ---- ",feature)
+//         console.log("layer ---- ",layer)
+//         editableLayers.addLayer(layer)
+//         //   if (layer instanceof L.Polyline) {
+//     //     layer.setStyle({
+//     //       'color': feature.properties.color
+//     //     });
+//     //   }
+//     }
+// }).addTo(map)
