@@ -21,8 +21,23 @@
     <link rel="stylesheet" href="./L.Control.Sidebar.css" />
     <script src="./L.Control.Sidebar.js"></script>
 </head>
-<body >
-    <div id = "map" style = "width:1400px; height:720px;"></div>
+<body>
+    <div class="fluid-container">
+        <div class="row mb-30">
+            <div class="col-2">
+                <button type="button" class="btn btn-outline-secondary" id="edit_features">Редактировать узлы</button>
+            </div>
+            <div class="col-2">
+                <button type="button" class="btn btn-outline-success" id="save_button">сохранить в бд</button>
+            </div>
+        </div>
+        
+        <div class="row">
+            <div id = "map" style = "width:1400px; height:720px;">
+            </div>
+        </div>
+    </div>
+    
 
     <div id="sidebar">
         <h1>Редактирование участка</h1>
@@ -36,18 +51,20 @@
             <label for="air_choice">Воздушная линия</label>
         </form>
         <br>
-        <div class="row" id="segment_length_editor">
-            <div class="col-12">
-                <div class="input-group">
-                    <input type="text" class="form-control" placeholder="Длина" id="segment_length" aria-label="Text input for segment length">
-                    
+        <div class="fluid-container">
+            <div class="row" id="segment_length_editor">
+                <div class="col-12">
+                    <div class="input-group">
+                        <input type="text" class="form-control" placeholder="Длина" id="segment_length" aria-label="Text input for segment length">
+                        
+                    </div>
                 </div>
             </div>
-        </div>
-        <br>
-        <div class="row justify-content" id="segment_length_editor">
-            <div class="col-6">
-                <button class="btn btn-outline-success" type="button" id="save_route_button">Сохранить</button>
+            <br>
+            <div class="row justify-content" id="segment_length_editor">
+                <div class="col-6">
+                    <button class="btn btn-outline-success" type="button" id="save_route_button">Сохранить</button>
+                </div>
             </div>
         </div>
     </div>
